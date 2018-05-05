@@ -32,7 +32,7 @@ public class ToeOffManager
 
    private static final ReferenceFrame worldFrame = ReferenceFrame.getWorldFrame();
 
-   private static final boolean DO_TOE_OFF_FOR_SIDE_STEPS = false;
+   private static final boolean DO_TOE_OFF_FOR_SIDE_STEPS = true;
    private static final boolean ENABLE_TOE_OFF_FOR_STEP_DOWN = true;
 
    private static final double forwardSteppingThreshold = -0.05;
@@ -90,10 +90,12 @@ public class ToeOffManager
 
    private final GlitchFilteredYoBoolean isRearAnklePitchHittingLimitFilt = new GlitchFilteredYoBoolean("isRearAnklePitchHittingLimitFilt", registry,
                                                                                                         isRearAnklePitchHittingLimit, largeGlitchWindowSize);
-   private final GlitchFilteredYoBoolean isLeadingKneePitchHittingUpperLimitFilt = new GlitchFilteredYoBoolean("isLeadingKneePitchHittingUpperLimitFilt", registry,
-                                                                                                               isLeadingKneePitchHittingUpperLimit, largeGlitchWindowSize);
+   private final GlitchFilteredYoBoolean isLeadingKneePitchHittingUpperLimitFilt = new GlitchFilteredYoBoolean("isLeadingKneePitchHittingUpperLimitFilt",
+                                                                                                               registry, isLeadingKneePitchHittingUpperLimit,
+                                                                                                               largeGlitchWindowSize);
    private final GlitchFilteredYoBoolean isRearKneePitchHittingLowerLimitFilt = new GlitchFilteredYoBoolean("isRearKneePitchHittingLowerLimitFilt", registry,
-                                                                                                               isRearKneePitchHittingLowerLimit, largeGlitchWindowSize);
+                                                                                                            isRearKneePitchHittingLowerLimit,
+                                                                                                            largeGlitchWindowSize);
 
    private final YoDouble minStepLengthForToeOff = new YoDouble("minStepLengthForToeOff", registry);
    private final YoDouble minStepHeightForToeOff = new YoDouble("minStepHeightForToeOff", registry);
@@ -143,12 +145,12 @@ public class ToeOffManager
       this.doToeOffIfPossibleInSingleSupport.set(toeOffParameters.doToeOffIfPossibleInSingleSupport());
 
       this.doToeOffWhenHittingAnkleLimit.set(toeOffParameters.doToeOffWhenHittingAnkleLimit());
-      this.doToeOffWhenHittingLeadingKneeUpperLimit.set(toeOffParameters.doToeOffWhenHittingKneeLimit());
-      this.doToeOffWhenHittingRearKneeLowerLimit.set(false); // TODO
+      this.doToeOffWhenHittingLeadingKneeUpperLimit.set(toeOffParameters.doToeOffWhenHittingLeadingKneeUpperLimit());
+      this.doToeOffWhenHittingRearKneeLowerLimit.set(toeOffParameters.doToeOffWhenHittingTrailingKneeLowerLimit());
 
       this.ankleLowerLimitToTriggerToeOff.set(toeOffParameters.getAnkleLowerLimitToTriggerToeOff());
       this.kneeUpperLimitToTriggerToeOff.set(toeOffParameters.getKneeUpperLimitToTriggerToeOff());
-      this.kneeLowerLimitToTriggerToeOff.set(0.0); // TODO
+      this.kneeLowerLimitToTriggerToeOff.set(toeOffParameters.getKneeLowerLimitToTriggerToeOff());
 
       this.icpPercentOfStanceForDSToeOff.set(toeOffParameters.getICPPercentOfStanceForDSToeOff());
       this.icpPercentOfStanceForSSToeOff.set(toeOffParameters.getICPPercentOfStanceForSSToeOff());
@@ -779,16 +781,16 @@ public class ToeOffManager
       @Override
       public boolean evaluateToeOffConditions(RobotSide trailingLeg)
       {
+         boolean ankleAtLimit = checkAnkleLimitForToeOff(trailingLeg);
+         boolean leadingKneeAtLimit = checkLeadingKneeUpperLimitForToeOff(trailingLeg.getOppositeSide());
+         boolean trailingKneeAtLimit = checkRearKneeLowerLimitForToeOff(trailingLeg);
+
          if (!isDesiredICPOKForToeOffFilt.getBooleanValue() || !isCurrentICPOKForToeOffFilt.getBooleanValue())
          {
             doLineToeOff.set(false);
             computeToeLineContact.set(true);
             return false;
          }
-
-         boolean ankleAtLimit = checkAnkleLimitForToeOff(trailingLeg);
-         boolean leadingKneeAtLimit = checkLeadingKneeUpperLimitForToeOff(trailingLeg.getOppositeSide());
-         boolean trailingKneeAtLimit = checkRearKneeLowerLimitForToeOff(trailingLeg);
 
          needToSwitchToToeOffForJointLimit.set(ankleAtLimit || leadingKneeAtLimit || trailingKneeAtLimit);
          if (needToSwitchToToeOffForJointLimit.getBooleanValue())
@@ -854,16 +856,16 @@ public class ToeOffManager
       @Override
       public boolean evaluateToeOffConditions(RobotSide trailingLeg)
       {
-         if (!isDesiredICPOKForToeOffFilt.getBooleanValue() || !isCurrentICPOKForToeOffFilt.getBooleanValue())
-         {
-            doPointToeOff.set(false);
-            computeToePointContact.set(true);
-            return false;
-         }
-
          boolean ankleAtLimit = checkAnkleLimitForToeOff(trailingLeg);
          boolean leadingKneeAtLimit = checkLeadingKneeUpperLimitForToeOff(trailingLeg.getOppositeSide());
          boolean trailingKneeAtLimit = checkRearKneeLowerLimitForToeOff(trailingLeg);
+
+         if (!isDesiredICPOKForToeOffFilt.getBooleanValue() || !isCurrentICPOKForToeOffFilt.getBooleanValue())
+         {
+            doLineToeOff.set(false);
+            computeToeLineContact.set(true);
+            return false;
+         }
 
          needToSwitchToToeOffForJointLimit.set(ankleAtLimit || leadingKneeAtLimit || trailingKneeAtLimit);
          if (needToSwitchToToeOffForJointLimit.getBooleanValue())
