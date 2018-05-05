@@ -785,7 +785,7 @@ public class ToeOffManager
          boolean leadingKneeAtLimit = checkLeadingKneeUpperLimitForToeOff(trailingLeg.getOppositeSide());
          boolean trailingKneeAtLimit = checkRearKneeLowerLimitForToeOff(trailingLeg);
 
-         if (!isDesiredICPOKForToeOffFilt.getBooleanValue() || !isCurrentICPOKForToeOffFilt.getBooleanValue())
+         if (!isDesiredICPOKForToeOffFilt.getBooleanValue())
          {
             doLineToeOff.set(false);
             computeToeLineContact.set(true);
@@ -797,6 +797,13 @@ public class ToeOffManager
          {
             doLineToeOff.set(true);
             computeToeLineContact.set(updateLineContactDuringToeOff.getBooleanValue());
+            return false;
+         }
+
+         if (!isCurrentICPOKForToeOffFilt.getBooleanValue())
+         {
+            doLineToeOff.set(false);
+            computeToeLineContact.set(true);
             return false;
          }
 
@@ -860,7 +867,7 @@ public class ToeOffManager
          boolean leadingKneeAtLimit = checkLeadingKneeUpperLimitForToeOff(trailingLeg.getOppositeSide());
          boolean trailingKneeAtLimit = checkRearKneeLowerLimitForToeOff(trailingLeg);
 
-         if (!isDesiredICPOKForToeOffFilt.getBooleanValue() || !isCurrentICPOKForToeOffFilt.getBooleanValue())
+         if (!isDesiredICPOKForToeOffFilt.getBooleanValue())
          {
             doLineToeOff.set(false);
             computeToeLineContact.set(true);
@@ -872,6 +879,13 @@ public class ToeOffManager
          {
             doPointToeOff.set(true);
             computeToePointContact.set(updatePointContactDuringToeOff.getBooleanValue());
+            return false;
+         }
+
+         if (!isCurrentICPOKForToeOffFilt.getBooleanValue())
+         {
+            doLineToeOff.set(false);
+            computeToeLineContact.set(true);
             return false;
          }
 
